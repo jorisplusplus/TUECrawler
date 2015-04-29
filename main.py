@@ -1,5 +1,5 @@
 """A quickstart example showing usage of the Google Calendar API."""
-from datetime import datetime
+import datetime
 import os
 
 from apiclient.discovery import build
@@ -13,6 +13,7 @@ import mechanize
 import cookielib
 import time
 import csv
+import dateutil.tz
 
 try:
     import argparse
@@ -72,10 +73,13 @@ def main():
     devices = p.getDevices()
     p.pushNote(devices[0]["iden"], 'Rooster', 'Starting rooster import')
 
+    localtz = dateutil.tz.tzlocal()
+    localoffset = localtz.utcoffset(datetime.datetime.now(localtz))
+    hours = localoffset.total_seconds()/3600
+    print 'utcoffset ',hours
 
     credentials = get_credentials()
     service = build('calendar', 'v3', http=credentials.authorize(Http()))
-    now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     page_token = None
     roosterID = None
     while True:
@@ -152,10 +156,10 @@ def main():
                     'summary': row[5],
                     'location': row[4],
                     'start': {
-                        'dateTime': row[0].strip()+'T'+row[2].strip()+':00.000+02:00'
+                        'dateTime': row[0].strip()+'T'+row[2].strip()+':00.000+0'+str("{0:.0f}".format(hours))+':00'
                     },
                     'end': {
-                        'dateTime': row[1].strip()+'T'+row[3].strip()+':00.000+02:00'
+                        'dateTime': row[1].strip()+'T'+row[3].strip()+':00.000+0'+str("{0:.0f}".format(hours))+':00'
                     },
                     }
                 created_event = service.events().insert(calendarId=roosterID, body=event).execute()
