@@ -132,6 +132,8 @@ def main():
     br.select_form('aspnetForm')
     button = None
     for control in br.form.controls:
+        if br[control.name] == ['ICS']:
+            br[control.name] = ['CSV']
         #if not control.type == 'hidden':
             #print "type=%s, name=%s value=%s" % (control.type, control.name, br[control.name])
         if 'Export' in control.name:
