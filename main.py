@@ -7,13 +7,13 @@ from httplib2 import Http
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
-from pushbullet import PushBullet
 from BeautifulSoup import BeautifulSoup
 import mechanize
 import cookielib
 import time
 import csv
 import dateutil.tz
+import telegram
 
 try:
     import argparse
@@ -27,7 +27,7 @@ APPLICATION_NAME = 'Calendar API Quickstart'
 
 Username = 'TUEuser'
 Password = 'TUEpass'
-ApiKey = 'PushAPI'
+apiKey = 'telegramKey'
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -69,9 +69,10 @@ def main():
     cj = cookielib.LWPCookieJar()
     br.set_cookiejar(cj)
 
-    p = PushBullet(ApiKey)
-    devices = p.getDevices()
-    p.pushNote(devices[0]["iden"], 'Rooster', 'Starting rooster import')
+    bot = telegram.Bot(token=apiKey)
+    chatid = bot.getUpdates()[-1].message.chat_id
+    
+    bot.sendMessage(chat_id=chatid, text="Starting rooster import.")
 
     localtz = dateutil.tz.tzlocal()
     localoffset = localtz.utcoffset(datetime.datetime.now(localtz))
@@ -132,10 +133,11 @@ def main():
     br.select_form('aspnetForm')
     button = None
     for control in br.form.controls:
-        if br[control.name] == ['ICS']:
+       	if br[control.name] == ['ICS']:
             br[control.name] = ['CSV']
-        #if not control.type == 'hidden':
+	#if not control.type == 'hidden':
             #print "type=%s, name=%s value=%s" % (control.type, control.name, br[control.name])
+            #print type(br[control.name])
         if 'Export' in control.name:
             button = control.name
     response = br.submit(name=button)
@@ -149,8 +151,10 @@ def main():
             print csvURL
     if csvURL:
         br.open('https://onderwijssso.tue.nl/'+csvURL)
+        print br.response().read()
         result = [row for row in csv.reader(br.response().read().splitlines(), delimiter=',')]
-        rownum = 0
+        print result
+	rownum = 0
         for row in result:
             if not rownum == 0:
                 print row
@@ -170,9 +174,9 @@ def main():
         print 'Finished saved ',rownum,' events'
         dur = "{:.1f}".format(time.time() - start_time)
         print("--- %s seconds ---" % (time.time() - start_time))
-        p.pushNote(devices[0]["iden"], 'Rooster', 'Job Succesfull. Time '+dur)
+        bot.sendMessage(chat_id=chatid,text='Job Succesfull. Time '+dur)
     else:
-        p.pushNote(devices[0]["iden"], 'Rooster', 'Job Failed')
+        bot.sendMessage(chat_id=chatid,text='Job Failed')
         print 'Job failed'
 
 if __name__ == '__main__':
