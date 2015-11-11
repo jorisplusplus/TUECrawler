@@ -9,3 +9,4 @@ pip install requests
 pip install python-magic  
 pip install google-api-python-client  
 pip install python-dateutil
+pip install python-telegram-bot
